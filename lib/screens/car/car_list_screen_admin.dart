@@ -9,6 +9,7 @@ import 'package:car_rental_app/screens/auth/login_screen.dart';
 import 'package:car_rental_app/screens/car/car_form_screen.dart';
 import 'package:car_rental_app/services/auth_services.dart';
 import 'package:car_rental_app/services/booking_service.dart';
+import 'package:car_rental_app/services/booking_logic_service.dart';
 import 'package:car_rental_app/services/car_services.dart';
 import 'package:car_rental_app/services/payment_service.dart';
 import 'package:car_rental_app/widgets/car_card.dart';
@@ -694,81 +695,32 @@ class _CarListScreenAdminState extends State<CarListScreenAdmin> {
   }
 
   List<BookingModel> get _pendingBookings {
-    return _bookings.where((booking) {
-      return booking.status?.toLowerCase() == 'pending';
-    }).toList();
+    return BookingLogicService.pendingBookings(_bookings);
   }
 
   List<PaymentModel> get _pendingPayments {
-    return _payments.where((payment) {
-      return payment.status?.toLowerCase() == 'pending';
-    }).toList();
+    return BookingLogicService.pendingPayments(_payments);
   }
 
   List<BookingModel> get _historyBookings {
-  return _bookings.where((booking) {
-    final bookingStatus =
-        booking.status?.toLowerCase();
-
-    final paymentStatus =
-        booking.paymentStatus?.toLowerCase();
-
-    if (_historyFilter == 'paid') {
-      return paymentStatus == 'paid' ||
-          paymentStatus == 'success' ||
-          paymentStatus == 'verified' ||
-          bookingStatus == 'completed';
-    }
-
-    if (_historyFilter == 'cancelled') {
-      return bookingStatus == 'cancelled';
-    }
-
-    // All = tampilkan semua booking
-    return true;
-  }).toList();
-}
+    return BookingLogicService.adminHistoryBookings(
+      _bookings,
+      _historyFilter,
+    );
+  }
 
   int get _paidHistoryCount {
-  return _bookings.where((booking) {
-    final bookingStatus =
-        booking.status?.toLowerCase();
-
-    final paymentStatus =
-        booking.paymentStatus?.toLowerCase();
-
-    return paymentStatus == 'paid' ||
-        paymentStatus == 'success' ||
-        paymentStatus == 'verified' ||
-        bookingStatus == 'completed';
-  }).length;
-}
+    return BookingLogicService.paidBookingCount(_bookings);
+  }
 
   int get _cancelledHistoryCount {
-    return _bookings.where((booking) {
-      return booking.status?.toLowerCase() == 'cancelled';
-    }).length;
+    return BookingLogicService.cancelledBookingCount(_bookings);
   }
 
   bool _canCancelBooking(
     BookingModel booking,
   ) {
-    final status = booking.status?.toLowerCase();
-    final paymentStatus = booking.paymentStatus?.toLowerCase();
-
-    if (status == 'cancelled' ||
-        status == 'completed' ||
-        status == 'active') {
-      return false;
-    }
-
-    if (paymentStatus == 'paid' ||
-        paymentStatus == 'success' ||
-        paymentStatus == 'pending') {
-      return false;
-    }
-
-    return status == 'pending' || status == 'confirmed';
+    return BookingLogicService.canAdminCancel(booking);
   }
 
   String _formatDate(
@@ -790,51 +742,19 @@ class _CarListScreenAdminState extends State<CarListScreenAdmin> {
   String _bookingStatusText(
     String? status,
   ) {
-    switch (status?.toLowerCase()) {
-      case 'pending':
-        return 'Menunggu Konfirmasi';
-      case 'confirmed':
-        return 'Siap Dibayar';
-      case 'active':
-        return 'Sewa Aktif';
-      case 'completed':
-        return 'Selesai';
-      case 'cancelled':
-        return 'Dibatalkan';
-      default:
-        return 'Tidak Diketahui';
-    }
+    return BookingLogicService.bookingStatusText(status);
   }
 
   String _paymentStatusText(
     String? status,
   ) {
-    switch (status?.toLowerCase()) {
-      case 'paid':
-      case 'success':
-        return 'Lunas';
-      case 'pending':
-        return 'Menunggu Verifikasi';
-      case 'failed':
-        return 'Gagal';
-      case 'unpaid':
-        return 'Belum Dibayar';
-      case 'refunded':
-        return 'Refund';
-      default:
-        return 'Belum Ada';
-    }
+    return BookingLogicService.paymentStatusText(status);
   }
 
   String _paymentMethodText(
     String method,
   ) {
-    switch (method) {
-      case 'transfer_bank':
-        return 'Transfer Bank';
-      default:
-        return method;
-    }
+    return BookingLogicService.paymentMethodText(method);
   }
 
   Color _bookingStatusColor(

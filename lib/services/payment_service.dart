@@ -54,9 +54,17 @@ class PaymentService {
     }
   }
 
-  static Future<List<PaymentModel>> getPayments() async {
+  static Future<List<PaymentModel>> getPayments({
+    int page = 1,
+    int limit = 100,
+  }) async {
     final url = Uri.parse(
       '${ApiConfig.baseUrl}/api/payments',
+    ).replace(
+      queryParameters: {
+        'page': page.toString(),
+        'limit': limit.toString(),
+      },
     );
 
     final response = await http.get(
@@ -115,7 +123,9 @@ class PaymentService {
   }
 
   static Future<Map<String, String>> getPaymentStatusMap() async {
-    final payments = await getPayments();
+    final payments = await getPayments(
+      limit: 100,
+    );
 
     final Map<String, String> result = {};
 

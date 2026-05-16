@@ -165,42 +165,11 @@ class _CarListScreenUserState extends State<CarListScreenUser> {
     });
 
     try {
-      final startDate = _formatDate(selectedStartDate);
-      final endDate = _formatDate(selectedEndDate);
-
-      final result = await CarService.getCars(
+      final availableCars = await CarService.getAvailableCars(
+        startDate: _formatDate(selectedStartDate),
+        endDate: _formatDate(selectedEndDate),
         limit: 100,
       );
-
-      final allCars = result['cars'] as List<CarModel>;
-
-      final availableCars = <CarModel>[];
-
-      for (final car in allCars) {
-        if (car.id == null || car.id!.isEmpty) {
-          continue;
-        }
-
-        try {
-          final availability =
-              await CarService.checkCarAvailability(
-            carId: car.id!,
-            startDate: startDate,
-            endDate: endDate,
-          );
-
-          final isAvailable =
-              availability['isAvailable'] == true;
-
-          if (isAvailable) {
-            availableCars.add(car);
-          }
-        } catch (e) {
-          print(
-            'Gagal cek availability untuk ${car.name}: $e',
-          );
-        }
-      }
 
       if (mounted) {
         setState(() {
@@ -311,9 +280,9 @@ class _CarListScreenUserState extends State<CarListScreenUser> {
       case 0:
         return 'Dashboard';
       case 1:
-        return 'Menunggu';
+        return 'Menunggu Konfirmasi';
       case 2:
-        return 'Tinggal Bayar';
+        return 'Bayar Pesanan';
       case 3:
         return 'Riwayat';
       default:

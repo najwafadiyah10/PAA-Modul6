@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/booking_model.dart';
 import '../../screens/payment/payment_screen.dart';
 import '../../services/booking_service.dart';
+import '../../services/booking_logic_service.dart';
 
 class BookingHistoryScreen extends StatefulWidget {
   final String filterType;
@@ -55,41 +56,10 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
   List<BookingModel> filterBookings(
     List<BookingModel> data,
   ) {
-    if (widget.filterType == 'pending') {
-      return data.where((booking) {
-        return booking.status?.toLowerCase() == 'pending';
-      }).toList();
-    }
-
-    if (widget.filterType == 'ready_to_pay') {
-      return data.where((booking) {
-        final bookingStatus = booking.status?.toLowerCase();
-        final paymentStatus =
-            booking.paymentStatus?.toLowerCase() ?? 'unpaid';
-
-        return bookingStatus == 'confirmed' &&
-            (paymentStatus == 'unpaid' ||
-                paymentStatus == 'failed');
-      }).toList();
-    }
-
-    if (widget.filterType == 'history') {
-      return data.where((booking) {
-        final bookingStatus = booking.status?.toLowerCase();
-        final paymentStatus =
-            booking.paymentStatus?.toLowerCase() ?? 'unpaid';
-
-        final isPendingBooking = bookingStatus == 'pending';
-
-        final isReadyToPay = bookingStatus == 'confirmed' &&
-            (paymentStatus == 'unpaid' ||
-                paymentStatus == 'failed');
-
-        return !isPendingBooking && !isReadyToPay;
-      }).toList();
-    }
-
-    return data;
+    return BookingLogicService.filterUserBookings(
+      data,
+      widget.filterType,
+    );
   }
 
   Future<void> getBookings() async {
@@ -169,93 +139,19 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
   }
 
   String getBookingStatusText(String? status) {
-    switch (status?.toLowerCase()) {
-      case 'pending':
-        return 'Menunggu Konfirmasi';
-
-      case 'confirmed':
-        return 'Booking Dikonfirmasi';
-
-      case 'active':
-        return 'Sewa Aktif';
-
-      case 'completed':
-        return 'Sewa Selesai';
-
-      case 'cancelled':
-        return 'Booking Dibatalkan';
-
-      default:
-        return 'Status Tidak Diketahui';
-    }
+    return BookingLogicService.userBookingStatusText(status);
   }
 
   String getBookingStatusDescription(String? status) {
-    switch (status?.toLowerCase()) {
-      case 'pending':
-        return 'Booking kamu sedang menunggu persetujuan admin.';
-
-      case 'confirmed':
-        return 'Booking sudah disetujui admin. Kamu bisa lanjut melakukan pembayaran.';
-
-      case 'active':
-        return 'Mobil sedang dalam masa penyewaan.';
-
-      case 'completed':
-        return 'Penyewaan mobil sudah selesai.';
-
-      case 'cancelled':
-        return 'Booking ini sudah dibatalkan.';
-
-      default:
-        return 'Status booking belum tersedia.';
-    }
+    return BookingLogicService.bookingStatusDescription(status);
   }
 
   String getPaymentStatusText(String? status) {
-    switch (status?.toLowerCase()) {
-      case 'paid':
-      case 'success':
-        return 'Pembayaran Lunas';
-
-      case 'pending':
-        return 'Menunggu Verifikasi';
-
-      case 'failed':
-        return 'Pembayaran Gagal';
-
-      case 'unpaid':
-        return 'Belum Dibayar';
-
-      case 'refunded':
-        return 'Dana Dikembalikan';
-
-      default:
-        return 'Status Pembayaran Tidak Diketahui';
-    }
+    return BookingLogicService.userPaymentStatusText(status);
   }
 
   String getPaymentStatusDescription(String? status) {
-    switch (status?.toLowerCase()) {
-      case 'paid':
-      case 'success':
-        return 'Pembayaran sudah dikonfirmasi oleh admin.';
-
-      case 'pending':
-        return 'Pembayaran sudah dikirim dan sedang dicek admin.';
-
-      case 'failed':
-        return 'Pembayaran gagal atau ditolak. Silakan lakukan pembayaran ulang.';
-
-      case 'unpaid':
-        return 'Pembayaran belum dilakukan.';
-
-      case 'refunded':
-        return 'Pembayaran sudah dikembalikan.';
-
-      default:
-        return 'Status pembayaran belum tersedia.';
-    }
+    return BookingLogicService.paymentStatusDescription(status);
   }
 
   String formatDate(String value) {
@@ -271,37 +167,11 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
   }
 
   bool canPay(BookingModel booking) {
-    final bookingStatus = booking.status?.toLowerCase();
-
-    final paymentStatus =
-        booking.paymentStatus?.toLowerCase() ?? 'unpaid';
-
-    return bookingStatus == 'confirmed' &&
-        (paymentStatus == 'unpaid' ||
-            paymentStatus == 'failed');
+    return BookingLogicService.canUserPay(booking);
   }
 
   bool canCancel(BookingModel booking) {
-    final bookingStatus = booking.status?.toLowerCase();
-
-    final paymentStatus =
-        booking.paymentStatus?.toLowerCase() ?? 'unpaid';
-
-    if (booking.id == null || booking.id!.isEmpty) {
-      return false;
-    }
-
-    if (bookingStatus == 'pending') {
-      return true;
-    }
-
-    if (bookingStatus == 'confirmed' &&
-        (paymentStatus == 'unpaid' ||
-            paymentStatus == 'failed')) {
-      return true;
-    }
-
-    return false;
+    return BookingLogicService.canUserCancel(booking);
   }
 
   Future<void> cancelBooking(

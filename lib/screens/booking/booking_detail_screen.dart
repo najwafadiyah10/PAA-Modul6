@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/booking_model.dart';
 import '../../services/booking_service.dart';
+import '../../services/booking_logic_service.dart';
 
 class BookingDetailScreen extends StatefulWidget {
   final String bookingId;
@@ -128,93 +129,19 @@ class _BookingDetailScreenState
   }
 
   String getBookingStatusText(String? status) {
-    switch (status?.toLowerCase()) {
-      case 'pending':
-        return 'Menunggu Konfirmasi';
-
-      case 'confirmed':
-        return 'Booking Dikonfirmasi';
-
-      case 'active':
-        return 'Sewa Aktif';
-
-      case 'completed':
-        return 'Sewa Selesai';
-
-      case 'cancelled':
-        return 'Booking Dibatalkan';
-
-      default:
-        return 'Status Tidak Diketahui';
-    }
+    return BookingLogicService.userBookingStatusText(status);
   }
 
   String getBookingStatusDescription(String? status) {
-    switch (status?.toLowerCase()) {
-      case 'pending':
-        return 'Booking kamu sudah dibuat dan sedang menunggu persetujuan admin.';
-
-      case 'confirmed':
-        return 'Booking sudah disetujui admin. Kamu bisa lanjut melakukan pembayaran dari halaman Booking Saya.';
-
-      case 'active':
-        return 'Mobil sedang dalam masa penyewaan.';
-
-      case 'completed':
-        return 'Penyewaan mobil sudah selesai.';
-
-      case 'cancelled':
-        return 'Booking ini sudah dibatalkan.';
-
-      default:
-        return 'Status booking belum tersedia.';
-    }
+    return BookingLogicService.bookingStatusDescription(status);
   }
 
   String getPaymentStatusText(String? status) {
-    switch (status?.toLowerCase()) {
-      case 'paid':
-      case 'success':
-        return 'Pembayaran Lunas';
-
-      case 'pending':
-        return 'Menunggu Verifikasi';
-
-      case 'failed':
-        return 'Pembayaran Gagal';
-
-      case 'unpaid':
-        return 'Belum Dibayar';
-
-      case 'refunded':
-        return 'Dana Dikembalikan';
-
-      default:
-        return 'Status Pembayaran Tidak Diketahui';
-    }
+    return BookingLogicService.userPaymentStatusText(status);
   }
 
   String getPaymentStatusDescription(String? status) {
-    switch (status?.toLowerCase()) {
-      case 'paid':
-      case 'success':
-        return 'Pembayaran sudah dikonfirmasi oleh admin.';
-
-      case 'pending':
-        return 'Pembayaran sudah dikirim dan sedang dicek oleh admin.';
-
-      case 'failed':
-        return 'Pembayaran gagal atau ditolak. Silakan lakukan pembayaran ulang.';
-
-      case 'unpaid':
-        return 'Pembayaran belum dilakukan.';
-
-      case 'refunded':
-        return 'Pembayaran sudah dikembalikan.';
-
-      default:
-        return 'Status pembayaran belum tersedia.';
-    }
+    return BookingLogicService.paymentStatusDescription(status);
   }
 
   Widget buildBackground({

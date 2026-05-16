@@ -78,9 +78,17 @@ class BookingService {
     }
   }
 
-  static Future<List<BookingModel>> getBookings() async {
+  static Future<List<BookingModel>> getBookings({
+    int page = 1,
+    int limit = 100,
+  }) async {
     final url = Uri.parse(
       '${ApiConfig.baseUrl}/api/bookings',
+    ).replace(
+      queryParameters: {
+        'page': page.toString(),
+        'limit': limit.toString(),
+      },
     );
 
     final response = await http.get(
@@ -152,30 +160,30 @@ class BookingService {
   }
 
   static Future<void> cancelBooking(
-  String id, {
-  String reason = 'Dibatalkan oleh penyewa',
-}) async {
-  final url = Uri.parse(
-    '${ApiConfig.baseUrl}/api/bookings/$id/cancel',
-  );
-
-  final response = await http.put(
-    url,
-    headers: await _headers(),
-    body: jsonEncode({
-      'reason': reason,
-    }),
-  );
-
-  print('CANCEL BOOKING STATUS: ${response.statusCode}');
-  print('CANCEL BOOKING RESPONSE: ${response.body}');
-
-  final body = jsonDecode(response.body);
-
-  if (response.statusCode != 200) {
-    throw Exception(
-      body['message'] ?? 'Gagal membatalkan booking',
+    String id, {
+    String reason = 'Dibatalkan oleh penyewa',
+  }) async {
+    final url = Uri.parse(
+      '${ApiConfig.baseUrl}/api/bookings/$id/cancel',
     );
+
+    final response = await http.put(
+      url,
+      headers: await _headers(),
+      body: jsonEncode({
+        'reason': reason,
+      }),
+    );
+
+    print('CANCEL BOOKING STATUS: ${response.statusCode}');
+    print('CANCEL BOOKING RESPONSE: ${response.body}');
+
+    final body = jsonDecode(response.body);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        body['message'] ?? 'Gagal membatalkan booking',
+      );
+    }
   }
-}
 }
