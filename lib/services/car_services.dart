@@ -70,6 +70,41 @@ class CarService {
     }
   }
 
+  static Future<Map<String, dynamic>> checkCarAvailability({
+  required String carId,
+  required String startDate,
+  required String endDate,
+}) async {
+  final url = Uri.parse(
+    '${ApiConfig.baseUrl}/api/cars/$carId/availability',
+  ).replace(
+    queryParameters: {
+      'startDate': startDate,
+      'endDate': endDate,
+    },
+  );
+
+  print('AVAILABILITY URL: $url');
+
+  final response = await http.get(
+    url,
+    headers: await _authHeaders(),
+  );
+
+  print('CHECK AVAILABILITY STATUS: ${response.statusCode}');
+  print('CHECK AVAILABILITY RESPONSE: ${response.body}');
+
+  final body = jsonDecode(response.body);
+
+  if (response.statusCode == 200) {
+    return body['data'] ?? {};
+  } else {
+    throw Exception(
+      body['message'] ?? 'Gagal mengecek ketersediaan mobil',
+    );
+  }
+}
+
   /// Tambah mobil baru (Admin only)
   static Future<CarModel> createCar(CarModel car) async {
     final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.carsPrefix}');

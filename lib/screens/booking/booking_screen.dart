@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import '../../models/car_model.dart';
@@ -20,19 +22,18 @@ class BookingScreen extends StatefulWidget {
 
 class _BookingScreenState extends State<BookingScreen> {
   DateTime? startDate;
-
   DateTime? endDate;
 
   bool isLoading = false;
 
   final pickupController = TextEditingController();
-
   final returnController = TextEditingController();
-
   final notesController = TextEditingController();
 
-  static const Color primaryColor = Color(0xFF1A1A2E);
-  static const Color backgroundColor = Color(0xFFF8F1F8);
+  static const Color primaryColor = Color(0xFF111827);
+  static const Color secondaryColor = Color(0xFF7C3AED);
+  static const Color accentColor = Color(0xFF38BDF8);
+  static const Color backgroundColor = Color(0xFFF7F2FF);
 
   Future<void> selectDate(
     bool isStart,
@@ -60,6 +61,11 @@ class _BookingScreenState extends State<BookingScreen> {
       setState(() {
         if (isStart) {
           startDate = picked;
+
+          if (endDate != null &&
+              endDate!.isBefore(startDate!)) {
+            endDate = null;
+          }
         } else {
           endDate = picked;
         }
@@ -74,6 +80,7 @@ class _BookingScreenState extends State<BookingScreen> {
           content: Text(
             'Pilih tanggal booking',
           ),
+          backgroundColor: Colors.orange,
         ),
       );
 
@@ -86,6 +93,7 @@ class _BookingScreenState extends State<BookingScreen> {
           content: Text(
             'Tanggal selesai tidak valid',
           ),
+          backgroundColor: Colors.red,
         ),
       );
 
@@ -143,14 +151,16 @@ class _BookingScreenState extends State<BookingScreen> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            e.toString(),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString(),
+            ),
+            backgroundColor: Colors.red,
           ),
-          backgroundColor: Colors.red,
-        ),
-      );
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -163,9 +173,7 @@ class _BookingScreenState extends State<BookingScreen> {
   @override
   void dispose() {
     pickupController.dispose();
-
     returnController.dispose();
-
     notesController.dispose();
 
     super.dispose();
@@ -195,76 +203,265 @@ class _BookingScreenState extends State<BookingScreen> {
     return widget.car.pricePerDay * getDuration();
   }
 
+  Widget buildBackground({
+    required Widget child,
+  }) {
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFFF8FAFC),
+                  Color(0xFFF3EEFF),
+                  Color(0xFFEFF6FF),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: CustomPaint(
+            painter: _BookingLinePainter(),
+          ),
+        ),
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [
+                  Colors.white.withOpacity(0.35),
+                  Colors.transparent,
+                  Colors.white.withOpacity(0.22),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: child,
+        ),
+      ],
+    );
+  }
+
+  Widget glassCard({
+    required Widget child,
+    EdgeInsets padding = const EdgeInsets.all(16),
+  }) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: 16,
+          sigmaY: 16,
+        ),
+        child: Container(
+          width: double.infinity,
+          padding: padding,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.78),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.88),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: primaryColor.withOpacity(0.08),
+                blurRadius: 22,
+                offset: const Offset(
+                  0,
+                  12,
+                ),
+              ),
+            ],
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+
   Widget buildCarSummary() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: primaryColor,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(28),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            primaryColor,
+            Color(0xFF312E81),
+            secondaryColor,
+          ],
+        ),
         boxShadow: [
           BoxShadow(
-            color: primaryColor.withOpacity(0.18),
-            blurRadius: 16,
+            color: secondaryColor.withOpacity(0.28),
+            blurRadius: 28,
             offset: const Offset(
               0,
-              8,
+              14,
             ),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          const Text(
-            'Detail Mobil',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
+          Positioned(
+            right: -8,
+            top: 10,
+            child: Icon(
+              Icons.directions_car_filled_rounded,
+              size: 118,
+              color: Colors.white.withOpacity(0.055),
             ),
           ),
-          const SizedBox(
-            height: 10,
+          Positioned(
+            right: 18,
+            bottom: 10,
+            child: Container(
+              width: 120,
+              height: 3,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.06),
+                    Colors.white.withOpacity(0.24),
+                    Colors.white.withOpacity(0.04),
+                  ],
+                ),
+              ),
+            ),
           ),
-          Row(
+          Column(
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
             children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.14),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.18),
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.local_taxi_rounded,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 13,
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Mobil Pilihan',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 4,
+                        ),
+                        Text(
+                          widget.car.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 3,
+                        ),
+                        Text(
+                          widget.car.brand,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.78),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(
+                height: 18,
+              ),
+
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  buildHeaderChip(
+                    icon: Icons.event_available_rounded,
+                    label: 'Booking',
+                  ),
+                  buildHeaderChip(
+                    icon: Icons.verified_rounded,
+                    label: 'Konfirmasi Admin',
+                  ),
+                  buildHeaderChip(
+                    icon: Icons.payments_rounded,
+                    label: 'Transfer Bank',
+                  ),
+                ],
+              ),
+
+              const SizedBox(
+                height: 16,
+              ),
+
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 13,
+                  vertical: 11,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.16),
+                  ),
                 ),
-                child: const Icon(
-                  Icons.directions_car_filled_rounded,
-                  color: Colors.white,
-                  size: 34,
-                ),
-              ),
-              const SizedBox(
-                width: 14,
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      widget.car.name,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    const Icon(
+                      Icons.payments_rounded,
+                      color: Colors.greenAccent,
+                      size: 20,
                     ),
                     const SizedBox(
-                      height: 4,
+                      width: 8,
                     ),
                     Text(
-                      widget.car.brand,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.78),
-                        fontSize: 14,
+                      'Rp ${widget.car.pricePerDay.toStringAsFixed(0)} / hari',
+                      style: const TextStyle(
+                        color: Colors.greenAccent,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
@@ -272,25 +469,44 @@ class _BookingScreenState extends State<BookingScreen> {
               ),
             ],
           ),
-          const SizedBox(
-            height: 16,
+        ],
+      ),
+    );
+  }
+
+  Widget buildHeaderChip({
+    required IconData icon,
+    required String label,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 7,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.14),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: Colors.white,
+            size: 15,
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 10,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.16),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Text(
-              'Rp ${widget.car.pricePerDay.toStringAsFixed(0)} / hari',
-              style: const TextStyle(
-                color: Colors.greenAccent,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+          const SizedBox(
+            width: 5,
+          ),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
@@ -299,19 +515,39 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   Widget buildSectionTitle(
-    String title,
-  ) {
+    String title, {
+    String? subtitle,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(
         bottom: 10,
       ),
-      child: Text(
-        title,
-        style: const TextStyle(
-          color: primaryColor,
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
+      child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: primaryColor,
+              fontSize: 17,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(
+              height: 3,
+            ),
+            Text(
+              subtitle,
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 12,
+                height: 1.3,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -327,35 +563,25 @@ class _BookingScreenState extends State<BookingScreen> {
       borderRadius: BorderRadius.circular(18),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(15),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.white.withOpacity(0.88),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: Colors.grey.shade200,
+            color: Colors.white.withOpacity(0.95),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 12,
-              offset: const Offset(
-                0,
-                6,
-              ),
-            ),
-          ],
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: primaryColor.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(12),
+                color: secondaryColor.withOpacity(0.10),
+                borderRadius: BorderRadius.circular(13),
               ),
               child: Icon(
                 icon,
-                color: primaryColor,
+                color: secondaryColor,
                 size: 22,
               ),
             ),
@@ -372,7 +598,7 @@ class _BookingScreenState extends State<BookingScreen> {
                     style: TextStyle(
                       color: Colors.grey.shade600,
                       fontSize: 12,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(
@@ -419,31 +645,31 @@ class _BookingScreenState extends State<BookingScreen> {
           ),
           child: Icon(
             icon,
-            color: primaryColor,
+            color: secondaryColor,
           ),
         ),
         prefixIconConstraints: const BoxConstraints(
           minWidth: 44,
         ),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: Colors.white.withOpacity(0.88),
         alignLabelWithHint: maxLines > 1,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide(
-            color: Colors.grey.shade300,
+            color: Colors.white.withOpacity(0.95),
           ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide(
-            color: Colors.grey.shade300,
+            color: Colors.white.withOpacity(0.95),
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           borderSide: const BorderSide(
-            color: primaryColor,
+            color: secondaryColor,
             width: 1.5,
           ),
         ),
@@ -459,16 +685,7 @@ class _BookingScreenState extends State<BookingScreen> {
     final duration = getDuration();
     final total = getTotalPrice();
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: Colors.green.withOpacity(0.25),
-        ),
-      ),
+    return glassCard(
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.start,
@@ -478,7 +695,7 @@ class _BookingScreenState extends State<BookingScreen> {
               Icon(
                 Icons.receipt_long_rounded,
                 color: Colors.green,
-                size: 20,
+                size: 21,
               ),
               SizedBox(
                 width: 8,
@@ -487,57 +704,36 @@ class _BookingScreenState extends State<BookingScreen> {
                 'Ringkasan Biaya',
                 style: TextStyle(
                   color: primaryColor,
-                  fontSize: 15,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
+
           const SizedBox(
-            height: 12,
+            height: 14,
           ),
-          Row(
-            mainAxisAlignment:
-                MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Durasi sewa',
-                style: TextStyle(
-                  color: Colors.grey.shade700,
-                ),
-              ),
-              Text(
-                '$duration hari',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+
+          buildPriceRow(
+            title: 'Durasi sewa',
+            value: '$duration hari',
           ),
+
           const SizedBox(
-            height: 8,
+            height: 9,
           ),
-          Row(
-            mainAxisAlignment:
-                MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Harga per hari',
-                style: TextStyle(
-                  color: Colors.grey.shade700,
-                ),
-              ),
-              Text(
+
+          buildPriceRow(
+            title: 'Harga per hari',
+            value:
                 'Rp ${widget.car.pricePerDay.toStringAsFixed(0)}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
           ),
+
           const Divider(
-            height: 24,
+            height: 26,
           ),
+
           Row(
             mainAxisAlignment:
                 MainAxisAlignment.spaceBetween,
@@ -550,15 +746,86 @@ class _BookingScreenState extends State<BookingScreen> {
                   fontSize: 15,
                 ),
               ),
-              Text(
-                'Rp ${total.toStringAsFixed(0)}',
-                style: const TextStyle(
-                  color: Colors.green,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+              Flexible(
+                child: Text(
+                  'Rp ${total.toStringAsFixed(0)}',
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 17,
+                  ),
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildPriceRow({
+    required String title,
+    required String value,
+  }) {
+    return Row(
+      mainAxisAlignment:
+          MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            color: Colors.grey.shade700,
+            fontSize: 13,
+          ),
+        ),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: const TextStyle(
+              color: primaryColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget buildInfoBox() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: secondaryColor.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: secondaryColor.withOpacity(0.16),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.info_outline_rounded,
+            color: secondaryColor,
+            size: 22,
+          ),
+          const SizedBox(
+            width: 10,
+          ),
+          Expanded(
+            child: Text(
+              'Setelah booking dibuat, admin akan mengonfirmasi terlebih dahulu. Pembayaran dilakukan setelah booking disetujui.',
+              style: TextStyle(
+                color: Colors.grey.shade800,
+                fontSize: 13,
+                height: 1.35,
+              ),
+            ),
           ),
         ],
       ),
@@ -583,7 +850,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 Icons.check_circle_rounded,
               ),
         label: Text(
-          isLoading ? 'Memproses...' : 'Booking Sekarang',
+          isLoading ? 'Memproses...' : 'Buat Booking',
           style: const TextStyle(
             color: Colors.white,
             fontSize: 16,
@@ -600,7 +867,8 @@ class _BookingScreenState extends State<BookingScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
-          elevation: 3,
+          elevation: 0,
+          shadowColor: Colors.transparent,
         ),
       ),
     );
@@ -621,100 +889,223 @@ class _BookingScreenState extends State<BookingScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(18),
-        children: [
-          buildCarSummary(),
+      body: buildBackground(
+        child: ListView(
+          padding: const EdgeInsets.all(18),
+          children: [
+            buildCarSummary(),
 
-          const SizedBox(
-            height: 22,
-          ),
-
-          buildSectionTitle(
-            'Pilih Jadwal',
-          ),
-
-          buildDateButton(
-            title: 'Tanggal Mulai',
-            value: startDate == null
-                ? 'Pilih tanggal mulai'
-                : formatDate(startDate),
-            icon: Icons.calendar_month_rounded,
-            onPressed: () => selectDate(
-              true,
+            const SizedBox(
+              height: 24,
             ),
-          ),
 
-          const SizedBox(
-            height: 12,
-          ),
+            glassCard(
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                children: [
+                  buildSectionTitle(
+                    'Pilih Jadwal',
+                    subtitle:
+                        'Tentukan tanggal mulai dan selesai sewa mobil.',
+                  ),
 
-          buildDateButton(
-            title: 'Tanggal Selesai',
-            value: endDate == null
-                ? 'Pilih tanggal selesai'
-                : formatDate(endDate),
-            icon: Icons.event_available_rounded,
-            onPressed: () => selectDate(
-              false,
+                  buildDateButton(
+                    title: 'Tanggal Mulai',
+                    value: startDate == null
+                        ? 'Pilih tanggal mulai'
+                        : formatDate(startDate),
+                    icon: Icons.calendar_month_rounded,
+                    onPressed: () => selectDate(
+                      true,
+                    ),
+                  ),
+
+                  const SizedBox(
+                    height: 12,
+                  ),
+
+                  buildDateButton(
+                    title: 'Tanggal Selesai',
+                    value: endDate == null
+                        ? 'Pilih tanggal selesai'
+                        : formatDate(endDate),
+                    icon: Icons.event_available_rounded,
+                    onPressed: () => selectDate(
+                      false,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
 
-          const SizedBox(
-            height: 22,
-          ),
+            const SizedBox(
+              height: 18,
+            ),
 
-          buildSectionTitle(
-            'Informasi Pengambilan',
-          ),
+            glassCard(
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                children: [
+                  buildSectionTitle(
+                    'Informasi Pengambilan',
+                    subtitle:
+                        'Isi lokasi pengambilan dan pengembalian mobil.',
+                  ),
 
-          buildInputField(
-            controller: pickupController,
-            label: 'Lokasi Pickup',
-            hint: 'Masukkan lokasi pengambilan',
-            icon: Icons.location_on_rounded,
-          ),
+                  buildInputField(
+                    controller: pickupController,
+                    label: 'Lokasi Pickup',
+                    hint: 'Masukkan lokasi pengambilan',
+                    icon: Icons.location_on_rounded,
+                  ),
 
-          const SizedBox(
-            height: 14,
-          ),
+                  const SizedBox(
+                    height: 14,
+                  ),
 
-          buildInputField(
-            controller: returnController,
-            label: 'Lokasi Pengembalian',
-            hint: 'Masukkan lokasi pengembalian',
-            icon: Icons.assignment_return_rounded,
-          ),
+                  buildInputField(
+                    controller: returnController,
+                    label: 'Lokasi Pengembalian',
+                    hint: 'Masukkan lokasi pengembalian',
+                    icon: Icons.assignment_return_rounded,
+                  ),
 
-          const SizedBox(
-            height: 14,
-          ),
+                  const SizedBox(
+                    height: 14,
+                  ),
 
-          buildInputField(
-            controller: notesController,
-            label: 'Catatan',
-            hint: 'Tambahkan catatan jika ada',
-            icon: Icons.notes_rounded,
-            maxLines: 3,
-          ),
+                  buildInputField(
+                    controller: notesController,
+                    label: 'Catatan',
+                    hint: 'Tambahkan catatan jika ada',
+                    icon: Icons.notes_rounded,
+                    maxLines: 3,
+                  ),
+                ],
+              ),
+            ),
 
-          const SizedBox(
-            height: 22,
-          ),
+            const SizedBox(
+              height: 18,
+            ),
 
-          buildPriceSummary(),
+            buildPriceSummary(),
 
-          const SizedBox(
-            height: 26,
-          ),
+            const SizedBox(
+              height: 18,
+            ),
 
-          buildSubmitButton(),
+            buildInfoBox(),
 
-          const SizedBox(
-            height: 16,
-          ),
-        ],
+            const SizedBox(
+              height: 24,
+            ),
+
+            buildSubmitButton(),
+
+            const SizedBox(
+              height: 18,
+            ),
+          ],
+        ),
       ),
     );
+  }
+}
+
+class _BookingLinePainter extends CustomPainter {
+  @override
+  void paint(
+    Canvas canvas,
+    Size size,
+  ) {
+    final linePaint = Paint()
+      ..color = const Color(0xFF7C3AED)
+          .withOpacity(0.045)
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+
+    final accentPaint = Paint()
+      ..color = const Color(0xFF38BDF8)
+          .withOpacity(0.045)
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+
+    for (double i = -size.height;
+        i < size.width;
+        i += 62) {
+      canvas.drawLine(
+        Offset(i, 0),
+        Offset(i + size.height, size.height),
+        linePaint,
+      );
+    }
+
+    for (double i = 0;
+        i < size.width + size.height;
+        i += 92) {
+      canvas.drawLine(
+        Offset(i, 0),
+        Offset(i - size.height, size.height),
+        accentPaint,
+      );
+    }
+
+    final wavePaint = Paint()
+      ..color = const Color(0xFF111827)
+          .withOpacity(0.035)
+      ..strokeWidth = 1.3
+      ..style = PaintingStyle.stroke;
+
+    final path = Path();
+
+    path.moveTo(
+      0,
+      size.height * 0.20,
+    );
+
+    path.cubicTo(
+      size.width * 0.28,
+      size.height * 0.14,
+      size.width * 0.62,
+      size.height * 0.28,
+      size.width,
+      size.height * 0.18,
+    );
+
+    canvas.drawPath(
+      path,
+      wavePaint,
+    );
+
+    final secondPath = Path();
+
+    secondPath.moveTo(
+      0,
+      size.height * 0.82,
+    );
+
+    secondPath.cubicTo(
+      size.width * 0.30,
+      size.height * 0.74,
+      size.width * 0.62,
+      size.height * 0.92,
+      size.width,
+      size.height * 0.80,
+    );
+
+    canvas.drawPath(
+      secondPath,
+      wavePaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(
+    covariant CustomPainter oldDelegate,
+  ) {
+    return false;
   }
 }
